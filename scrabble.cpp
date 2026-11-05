@@ -243,41 +243,62 @@ int BuscarJugadorRegistro(string nombre) {
     return -1;
 }
 
-// Pide los dos nombres y los asocia al registro
+// Pide los dos nombres y los asocia al registro.
+// Si ya hay jugadores en el registro, se puede elegir uno de la lista
+// o escribir un nombre nuevo.
 void CambiarNombres() {
     string nombres[2];
-    bool validos = false;
-    while (!validos) {
-        for (int i = 0; i < 2; i++) {
-            cout << "Nombre del jugador " << (i + 1) << ": ";
-            getline(cin, nombres[i]);
-            if (cin.eof()) {
-                cout << "\nFin de la entrada. Se cierra el programa." << endl;
-                exit(0);
+    for (int i = 0; i < 2; i++) {
+        bool valido = false;
+        while (!valido) {
+            cout << "\n--- Jugador " << (i + 1) << " ---" << endl;
+            int eleccion = 0;
+            if (CantRegistrados > 0) {
+                cout << "Jugadores registrados:" << endl;
+                for (int k = 0; k < CantRegistrados; k++) {
+                    cout << "  " << (k + 1) << ". " << Registro[k].nombre << endl;
+                }
+                cout << "  0. Escribir un nombre nuevo" << endl;
+                cout << "Opcion: ";
+                eleccion = LeerOpcion(0, CantRegistrados);
             }
-            string limpio = "";
-            for (int k = 0; k < (int)nombres[i].length(); k++) {
-                char c = nombres[i][k];
-                if (c == '\r' || c == '\t') c = ' ';
-                limpio += c;
+
+            if (eleccion > 0) {
+                nombres[i] = Registro[eleccion - 1].nombre;
+            } else {
+                cout << "Nombre del jugador " << (i + 1) << ": ";
+                string leido;
+                getline(cin, leido);
+                if (cin.eof()) {
+                    cout << "\nFin de la entrada. Se cierra el programa." << endl;
+                    exit(0);
+                }
+                // quitar espacios al inicio y al final, y cambiar los de adentro por _
+                string limpio = "";
+                for (int k = 0; k < (int)leido.length(); k++) {
+                    char c = leido[k];
+                    if (c == '\r' || c == '\t') c = ' ';
+                    limpio += c;
+                }
+                int ini = 0;
+                int fin = (int)limpio.length() - 1;
+                while (ini <= fin && limpio[ini] == ' ') ini++;
+                while (fin >= ini && limpio[fin] == ' ') fin--;
+                string recortado = "";
+                for (int k = ini; k <= fin; k++) {
+                    if (limpio[k] == ' ') recortado += '_';
+                    else recortado += limpio[k];
+                }
+                nombres[i] = recortado;
             }
-            int ini = 0;
-            int fin = (int)limpio.length() - 1;
-            while (ini <= fin && limpio[ini] == ' ') ini++;
-            while (fin >= ini && limpio[fin] == ' ') fin--;
-            string recortado = "";
-            for (int k = ini; k <= fin; k++) {
-                if (limpio[k] == ' ') recortado += '_';
-                else recortado += limpio[k];
+
+            if (nombres[i] == "") {
+                cout << "El nombre no puede estar vacio." << endl;
+            } else if (i == 1 && NormalizarTexto(nombres[1]) == NormalizarTexto(nombres[0])) {
+                cout << nombres[0] << " ya es el jugador 1. Elija otro jugador." << endl;
+            } else {
+                valido = true;
             }
-            nombres[i] = recortado;
-        }
-        if (nombres[0] == "" || nombres[1] == "") {
-            cout << "Los nombres no pueden estar vacios. Escribanlos de nuevo." << endl;
-        } else if (NormalizarTexto(nombres[0]) == NormalizarTexto(nombres[1])) {
-            cout << "Los dos jugadores deben tener nombres distintos. Escribanlos de nuevo." << endl;
-        } else {
-            validos = true;
         }
     }
 
@@ -844,7 +865,7 @@ void ActualizarResultados() {
 void JugarPartida() {
     for (int r = 0; r < TAMANOTABLERO; r++)
         for (int c = 0; c < TAMANOTABLERO; c++)
-            Tablero[r][c] = "";   // la estrella central solo la dibuja MostrarTablero
+            Tablero[r][c] = "";  
 
     LlenarBolsa();
 
