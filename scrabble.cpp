@@ -15,7 +15,7 @@ const int CENTRO = 7;
 const int TOTALFICHAS = 98;
 const int TOTALPORTAFICHAS = 7;
 const int CANTMAXREGISTRO = 100;
-const int MAXCANTPALABRAS = 15;
+const int MAXCANTPALABRA = 15;
 const int MAXPALABRASFORMADAS = 16;
 
 // Estructuras
