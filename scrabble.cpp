@@ -43,6 +43,8 @@ RegistroJugador Registro[CANTMAXREGISTRO];
 int CantRegistrados = 0;
 Jugador Jugadores[2];
 bool nombresConfigurados = false;
+Ficha Bolsa[TOTALFICHAS];
+int FichasEnBolsa = 0;
 
 // Metodos
 int LeerOpcion(int minimo, int maximo);
@@ -52,6 +54,8 @@ void GuardarRegistro();
 int BuscarJugadorRegistro(string nombre);
 void CambiarNombres();
 void MostrarRegistro();
+int ValorLetra(string letra);
+void LlenarBolsa();
 
 // main
 int main() {
@@ -285,3 +289,43 @@ void MostrarRegistro() {
     }
 }
 
+// Puntos de una ficha segun la tabla oficial
+int ValorLetra(string letra) {
+    if (letra == "A" || letra == "E" || letra == "I" || letra == "L" || letra == "N" ||
+        letra == "O" || letra == "R" || letra == "S" || letra == "T" || letra == "U") {
+        return 1;
+    }
+    if (letra == "D" || letra == "G") return 2;
+    if (letra == "B" || letra == "C" || letra == "M" || letra == "P") return 3;
+    if (letra == "F" || letra == "H" || letra == "V" || letra == "Y") return 4;
+    if (letra == "CH" || letra == "Q") return 5;
+    if (letra == "J" || letra == "LL" || letra == "Ñ" || letra == "RR" || letra == "X") return 8;
+    if (letra == "Z") return 10;
+    return 0;
+}
+
+// Crea las 98 fichas
+void LlenarBolsa() {
+    string letras[28] = {"A", "E", "I", "L", "N", "O", "R", "S", "T", "U",
+                         "D", "G",
+                         "B", "C", "M", "P",
+                         "F", "H", "V", "Y",
+                         "CH", "Q",
+                         "J", "LL", "Ñ", "RR", "X",
+                         "Z"};
+    int cantidades[28] = {12, 12, 6, 4, 5, 9, 5, 6, 4, 5,
+                          5, 2,
+                          2, 4, 2, 2,
+                          1, 2, 1, 1,
+                          1, 1,
+                          1, 1, 1, 1, 1,
+                          1};
+    FichasEnBolsa = 0;
+    for (int i = 0; i < 28; i++) {
+        for (int j = 0; j < cantidades[i]; j++) {
+            Bolsa[FichasEnBolsa].letra = letras[i];
+            Bolsa[FichasEnBolsa].valor = ValorLetra(letras[i]);
+            FichasEnBolsa++;
+        }
+    }
+}
