@@ -85,6 +85,7 @@ bool ArmarYValidarPalabras();
 int CalcularPuntos();
 bool CambiarFichas();
 bool ProbarJugada();
+void JugarTurno();
 
 // main
 int main() {
@@ -764,4 +765,44 @@ bool ProbarJugada() {
         }
         MostrarPortafichas(TurnoActual);
     }
+}
+
+// Controla el turno completo de un jugador
+void JugarTurno() {
+    int numJ = TurnoActual;
+    PuntosTurno = 0;
+
+    cout << "\n=========================================" << endl;
+    cout << "Turno de " << Jugadores[numJ].nombrejug << endl;
+    cout << "=========================================" << endl;
+    MostrarTablero();
+    MostrarPortafichas(numJ);
+
+    bool terminado = false;
+    while (!terminado) {
+        cout << "1. Colocar palabra   2. Cambiar todas las fichas   3. Saltar turno" << endl;
+        cout << "Opcion: ";
+        int opcion = LeerOpcion(1, 3);
+        if (opcion == 1) {
+            if (ProbarJugada()) Jugadores[numJ].TurnosSaltados = 0;
+            else Jugadores[numJ].TurnosSaltados++;
+            terminado = true;
+        } else if (opcion == 2) {
+            if (CambiarFichas()) {
+                cout << "Se cambiaron todas las fichas." << endl;
+                Jugadores[numJ].TurnosSaltados = 0;
+                terminado = true;
+            } else {
+                cout << "No hay suficientes fichas en la bolsa para cambiar. Elija otra accion." << endl;
+            }
+        } else {
+            Jugadores[numJ].TurnosSaltados++;
+            terminado = true;
+        }
+    }
+
+    cout << "\nPuntos de esta jugada: " << PuntosTurno << endl;
+    cout << "Puntaje total -> " << Jugadores[0].nombrejug << ": " << Jugadores[0].puntajejug
+         << "   " << Jugadores[1].nombrejug << ": " << Jugadores[1].puntajejug << endl;
+    MostrarPortafichas(numJ);
 }
