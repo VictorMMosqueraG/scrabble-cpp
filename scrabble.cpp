@@ -243,8 +243,7 @@ int BuscarJugadorRegistro(string nombre) {
     return -1;
 }
 
-//FIXME: bug cuando se cambia nombre (esta duplicando el registro de un jugador)
-// CambiarNombres: pide los dos nombres y los asocia al registro
+// Pide los dos nombres y los asocia al registro
 void CambiarNombres() {
     string nombres[2];
     bool validos = false;
