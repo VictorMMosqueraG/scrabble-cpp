@@ -81,6 +81,7 @@ void PartirPalabra(string palabra);
 bool ValidarJugadaTablero();
 bool ValidarConRival(string palabra);
 bool ArmarYValidarPalabras();
+int CalcularPuntos();
 
 // main
 int main() {
@@ -677,4 +678,18 @@ bool ArmarYValidarPalabras() {
     }
     cout << "Todas las palabras fueron aceptadas." << endl;
     return true;
+}
+
+// Suma las fichas de cada palabra leyendolas del tablero
+int CalcularPuntos() {
+    int total = 0;
+    for (int i = 0; i < CantPalabrasFormadas; i++) {
+        int wr = 0, wc = 0;
+        if (SentidoPalabra[i] == 'H') wc = 1;
+        else wr = 1;
+        for (int k = 0; k < LargoPalabra[i]; k++) {
+            total += ValorLetra(Tablero[FilaPalabra[i] + wr * k][ColumnaPalabra[i] + wc * k]);
+        }
+    }
+    return total;
 }
