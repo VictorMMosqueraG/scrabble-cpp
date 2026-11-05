@@ -41,6 +41,8 @@ struct RegistroJugador{
 // Variables globales
 RegistroJugador Registro[CANTMAXREGISTRO];
 int CantRegistrados = 0;
+Jugador Jugadores[2];
+bool nombresConfigurados = false;
 
 // Prototipos
 int LeerOpcion(int minimo, int maximo);
@@ -48,16 +50,23 @@ string NormalizarTexto(string texto);
 bool CargarRegistro();
 void GuardarRegistro();
 int BuscarJugadorRegistro(string nombre);
+void CambiarNombres();
 
 // main
 int main() {
 #ifdef _WIN32
-    SetConsoleOutputCP(65001); 
+    SetConsoleOutputCP(65001);  
 #endif
 
     cout << "=========================================" << endl;
     cout << "         SCRABBLE EN CASTELLANO" << endl;
     cout << "=========================================" << endl;
+
+    if (!CargarRegistro()) {
+        cout << "\nEs la primera vez que se ejecuta el juego." << endl;
+        cout << "Antes de continuar, escriban los nombres de los jugadores." << endl;
+        CambiarNombres();
+    }
 
     int opcion = 0;
     while (opcion != 4) {
@@ -70,7 +79,7 @@ int main() {
         opcion = LeerOpcion(1, 4);
 
         if (opcion == 1) {
-            cout << "Opcion en construccion." << endl;
+            CambiarNombres();
         } else if (opcion == 2) {
             cout << "Opcion en construccion." << endl;
         } else if (opcion == 3) {
@@ -191,4 +200,66 @@ int BuscarJugadorRegistro(string nombre) {
         }
     }
     return -1;
+}
+
+// CambiarNombres: pide los dos nombres y los asocia al registro
+void CambiarNombres() {
+    string nombres[2];
+    bool validos = false;
+    while (!validos) {
+        for (int i = 0; i < 2; i++) {
+            cout << "Nombre del jugador " << (i + 1) << ": ";
+            getline(cin, nombres[i]);
+            if (cin.eof()) {
+                cout << "\nFin de la entrada. Se cierra el programa." << endl;
+                exit(0);
+            }
+            string limpio = "";
+            for (int k = 0; k < (int)nombres[i].length(); k++) {
+                char c = nombres[i][k];
+                if (c == '\r' || c == '\t') c = ' ';
+                limpio += c;
+            }
+            int ini = 0;
+            int fin = (int)limpio.length() - 1;
+            while (ini <= fin && limpio[ini] == ' ') ini++;
+            while (fin >= ini && limpio[fin] == ' ') fin--;
+            string recortado = "";
+            for (int k = ini; k <= fin; k++) {
+                if (limpio[k] == ' ') recortado += '_';
+                else recortado += limpio[k];
+            }
+            nombres[i] = recortado;
+        }
+        if (nombres[0] == "" || nombres[1] == "") {
+            cout << "Los nombres no pueden estar vacios. Escribanlos de nuevo." << endl;
+        } else if (NormalizarTexto(nombres[0]) == NormalizarTexto(nombres[1])) {
+            cout << "Los dos jugadores deben tener nombres distintos. Escribanlos de nuevo." << endl;
+        } else {
+            validos = true;
+        }
+    }
+
+    for (int i = 0; i < 2; i++) {
+        int pos = BuscarJugadorRegistro(nombres[i]);
+        if (pos != -1) {
+            nombres[i] = Registro[pos].nombre;
+            cout << "Bienvenido de nuevo, " << nombres[i] << ". Ganadas: " << Registro[pos].ganadas
+                 << "  Perdidas: " << Registro[pos].perdidas
+                 << "  Empatadas: " << Registro[pos].empatadas << endl;
+        } else if (CantRegistrados < CANTMAXREGISTRO) {
+            Registro[CantRegistrados].nombre = nombres[i];
+            Registro[CantRegistrados].ganadas = 0;
+            Registro[CantRegistrados].perdidas = 0;
+            Registro[CantRegistrados].empatadas = 0;
+            CantRegistrados++;
+            cout << "Jugador nuevo registrado: " << nombres[i] << endl;
+        } else {
+            cout << "El registro esta lleno; " << nombres[i]
+                 << " no se podra guardar." << endl;
+        }
+        Jugadores[i].nombrejug = nombres[i];
+    }
+    GuardarRegistro();
+    nombresConfigurados = true;
 }
