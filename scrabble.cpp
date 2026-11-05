@@ -47,6 +47,7 @@ bool nombresConfigurados = false;
 Ficha Bolsa[TOTALFICHAS];
 int FichasEnBolsa = 0;
 bool AtrilUsado[TOTALPORTAFICHAS];
+string Tablero[TAMANOTABLERO][TAMANOTABLERO];       // "" = casilla libre
 
 // Metodos
 int LeerOpcion(int minimo, int maximo);
@@ -59,6 +60,8 @@ void MostrarRegistro();
 int ValorLetra(string letra);
 void LlenarBolsa();
 void ReponerPortafichas(int numJugador);
+void MostrarTablero();
+void MostrarPortafichas(int numJugador);
 
 // main
 int main() {
@@ -358,4 +361,44 @@ void ReponerPortafichas(int numJugador) {
     for (int k = 0; k < TOTALPORTAFICHAS; k++) {
         AtrilUsado[k] = false;
     }
+}
+
+// Imprime el tablero con coordenadas de 1 a 15
+void MostrarTablero() {
+    cout << endl << "    ";
+    for (int c = 0; c < TAMANOTABLERO; c++) {
+        if (c + 1 < 10) cout << "  " << (c + 1);
+        else cout << " " << (c + 1);
+    }
+    cout << endl;
+    for (int r = 0; r < TAMANOTABLERO; r++) {
+        if (r + 1 < 10) cout << "  " << (r + 1) << " ";
+        else cout << " " << (r + 1) << " ";
+        for (int c = 0; c < TAMANOTABLERO; c++) {
+            string casilla = Tablero[r][c];
+            if (casilla == "") {
+                if (r == CENTRO && c == CENTRO) casilla = "*";
+                else casilla = ".";
+            }
+            int ancho = casilla.length();
+            if (casilla == "Ñ") ancho = 1;      // 2 bytes, 1 caracter en pantalla
+            for (int k = ancho; k < 3; k++) cout << " ";
+            cout << casilla;
+        }
+        cout << endl;
+    }
+    cout << "Fichas en la bolsa: " << FichasEnBolsa << endl;
+}
+
+// Fichas del jugador con su valor
+void MostrarPortafichas(int numJugador) {
+    cout << "Portafichas de " << Jugadores[numJugador].nombrejug << ": ";
+    if (Jugadores[numJugador].CantFichasAct == 0) {
+        cout << "(vacio)";
+    }
+    for (int k = 0; k < Jugadores[numJugador].CantFichasAct; k++) {
+        cout << "[" << Jugadores[numJugador].Atril[k].letra << "("
+             << Jugadores[numJugador].Atril[k].valor << ")] ";
+    }
+    cout << endl;
 }
