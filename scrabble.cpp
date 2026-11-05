@@ -44,18 +44,19 @@ int CantRegistrados = 0;
 Jugador Jugadores[2];
 bool nombresConfigurados = false;
 
-// Prototipos
+// Metodos
 int LeerOpcion(int minimo, int maximo);
 string NormalizarTexto(string texto);
 bool CargarRegistro();
 void GuardarRegistro();
 int BuscarJugadorRegistro(string nombre);
 void CambiarNombres();
+void MostrarRegistro();
 
 // main
 int main() {
 #ifdef _WIN32
-    SetConsoleOutputCP(65001);  
+    SetConsoleOutputCP(65001);   
 #endif
 
     cout << "=========================================" << endl;
@@ -83,7 +84,7 @@ int main() {
         } else if (opcion == 2) {
             cout << "Opcion en construccion." << endl;
         } else if (opcion == 3) {
-            cout << "Opcion en construccion." << endl;
+            MostrarRegistro();
         }
     }
 
@@ -202,6 +203,7 @@ int BuscarJugadorRegistro(string nombre) {
     return -1;
 }
 
+//FIXME: bug cuando se cambia nombre (esta duplicando el registro de un jugador)
 // CambiarNombres: pide los dos nombres y los asocia al registro
 void CambiarNombres() {
     string nombres[2];
@@ -263,3 +265,23 @@ void CambiarNombres() {
     GuardarRegistro();
     nombresConfigurados = true;
 }
+
+// Tabla de resultados historicos
+void MostrarRegistro() {
+    if (CantRegistrados == 0) {
+        cout << "\nNo hay jugadores registrados." << endl;
+        return;
+    }
+    cout << "\n=========== REGISTRO DE RESULTADOS ===========" << endl;
+    cout << "Jugador              Ganadas  Perdidas  Empatadas" << endl;
+    int i = 0;
+    while (i < CantRegistrados) {
+        string nombre = Registro[i].nombre;
+        cout << nombre;
+        for (int k = nombre.length(); k < 21; k++) cout << " ";
+        cout << Registro[i].ganadas << "\t " << Registro[i].perdidas << "\t   "
+             << Registro[i].empatadas << endl;
+        i = i + 1;
+    }
+}
+
