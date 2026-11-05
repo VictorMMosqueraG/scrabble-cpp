@@ -63,6 +63,7 @@ char SentidoPalabra[MAXPALABRASFORMADAS];
 int LargoPalabra[MAXPALABRASFORMADAS];
 int CantPalabrasFormadas = 0;
 int PuntosTurno = 0;
+bool PartidaTerminada = false;
 
 // Metodos
 int LeerOpcion(int minimo, int maximo);
@@ -87,11 +88,12 @@ bool CambiarFichas();
 bool ProbarJugada();
 void JugarTurno();
 void ActualizarResultados();
+void JugarPartida();
 
 // main
 int main() {
 #ifdef _WIN32
-    SetConsoleOutputCP(65001); 
+    SetConsoleOutputCP(65001);   // para que la Ñ se vea bien en la consola
 #endif
     srand(time(0));
 
@@ -118,7 +120,11 @@ int main() {
         if (opcion == 1) {
             CambiarNombres();
         } else if (opcion == 2) {
-            cout << "Opcion en construccion." << endl;
+            if (!nombresConfigurados) {
+                cout << "\nPrimero escriban los nombres de los jugadores." << endl;
+                CambiarNombres();
+            }
+            JugarPartida();
         } else if (opcion == 3) {
             MostrarRegistro();
         }
@@ -833,4 +839,37 @@ void ActualizarResultados() {
         if (pos1 != -1) Registro[pos1].empatadas++;
     }
     GuardarRegistro();
+}
+
+// Prepara la partida, repite los turnos y cierra
+void JugarPartida() {
+    for (int r = 0; r < TAMANOTABLERO; r++)
+        for (int c = 0; c < TAMANOTABLERO; c++)
+            Tablero[r][c] = "";   // la estrella central solo la dibuja MostrarTablero
+
+    LlenarBolsa();
+
+    for (int i = 0; i < 2; i++) {
+        Jugadores[i].puntajejug = 0;
+        Jugadores[i].CantFichasAct = 0;
+        Jugadores[i].TurnosSaltados = 0;
+        for (int k = 0; k < TOTALPORTAFICHAS; k++) AtrilUsado[k] = true;
+        ReponerPortafichas(i);
+    }
+
+    PrimeraJugada = true;
+    PartidaTerminada = false;
+    TurnoActual = 0;
+
+    while (!PartidaTerminada) {
+        JugarTurno();
+        bool sinFichas = FichasEnBolsa == 0 && Jugadores[TurnoActual].CantFichasAct == 0;
+        bool ambosSaltaron = Jugadores[0].TurnosSaltados >= 2 && Jugadores[1].TurnosSaltados >= 2;
+        if (sinFichas || ambosSaltaron) {
+            PartidaTerminada = true;
+        } else {
+            TurnoActual = 1 - TurnoActual;
+        }
+    }
+    ActualizarResultados();
 }
