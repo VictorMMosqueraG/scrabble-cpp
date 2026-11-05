@@ -1,0 +1,11 @@
+# ejecutables
+scrabble
+scrabble.exe
+*.o
+
+# archivo que genera el programa al jugar
+registro.txt
+
+# carpetas del editor
+.vscode/
+.idea/
