@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <cstdlib>
+#include <fstream>
 #ifdef _WIN32
 #include <windows.h>
 #endif
@@ -30,7 +31,7 @@ struct Jugador{
     int TurnosSaltados;
 };
 
-struct RegistorJugador{
+struct RegistroJugador{
     string nombre;
     int ganadas;
     int perdidas;
@@ -38,10 +39,15 @@ struct RegistorJugador{
 };
 
 // Variables globales
+RegistroJugador Registro[CANTMAXREGISTRO];
+int CantRegistrados = 0;
 
 // Prototipos
 int LeerOpcion(int minimo, int maximo);
 string NormalizarTexto(string texto);
+bool CargarRegistro();
+void GuardarRegistro();
+int BuscarJugadorRegistro(string nombre);
 
 // main
 int main() {
@@ -138,4 +144,51 @@ string NormalizarTexto(string texto) {
         }
     }
     return salida;
+}
+
+// ============================================================================
+// CargarRegistro: lee registro.txt. Falso si no existe (primera ejecucion)
+// ============================================================================
+bool CargarRegistro() {
+    ifstream archivo("registro.txt");
+    CantRegistrados = 0;
+    if (!archivo.is_open()) {
+        return false;
+    }
+    string nombre;
+    int g, p, e;
+    while (CantRegistrados < CANTMAXREGISTRO && archivo >> nombre >> g >> p >> e) {
+        Registro[CantRegistrados].nombre = nombre;
+        Registro[CantRegistrados].ganadas = g;
+        Registro[CantRegistrados].perdidas = p;
+        Registro[CantRegistrados].empatadas = e;
+        CantRegistrados++;
+    }
+    archivo.close();
+    return true;
+}
+
+// Reescribe registro.txt completo
+void GuardarRegistro() {
+    ofstream archivo("registro.txt");
+    if (!archivo.is_open()) {
+        cout << "No se pudo guardar el registro de resultados." << endl;
+        return;
+    }
+    for (int i = 0; i < CantRegistrados; i++) {
+        archivo << Registro[i].nombre << " " << Registro[i].ganadas << " "
+                << Registro[i].perdidas << " " << Registro[i].empatadas << endl;
+    }
+    archivo.close();
+}
+
+// Posicion del nombre en Registro, o -1
+int BuscarJugadorRegistro(string nombre) {
+    string buscado = NormalizarTexto(nombre);
+    for (int i = 0; i < CantRegistrados; i++) {
+        if (NormalizarTexto(Registro[i].nombre) == buscado) {
+            return i;
+        }
+    }
+    return -1;
 }
