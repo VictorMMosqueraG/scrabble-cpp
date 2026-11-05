@@ -82,6 +82,7 @@ bool ValidarJugadaTablero();
 bool ValidarConRival(string palabra);
 bool ArmarYValidarPalabras();
 int CalcularPuntos();
+bool CambiarFichas();
 
 // main
 int main() {
@@ -692,4 +693,28 @@ int CalcularPuntos() {
         }
     }
     return total;
+}
+
+// Cambia todas las fichas del jugador en turno
+bool CambiarFichas() {
+    int numJ = TurnoActual;
+    int n = Jugadores[numJ].CantFichasAct;
+    if (n == 0 || FichasEnBolsa < n) {
+        return false;
+    }
+    Ficha temporal[TOTALPORTAFICHAS];
+    for (int k = 0; k < n; k++) {
+        temporal[k] = Jugadores[numJ].Atril[k];
+    }
+    for (int k = 0; k < n; k++) {
+        int pos = rand() % FichasEnBolsa;
+        Jugadores[numJ].Atril[k] = Bolsa[pos];
+        Bolsa[pos] = Bolsa[FichasEnBolsa - 1];
+        FichasEnBolsa--;
+    }
+    for (int k = 0; k < n; k++) {
+        Bolsa[FichasEnBolsa] = temporal[k];
+        FichasEnBolsa++;
+    }
+    return true;
 }
