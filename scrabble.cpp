@@ -41,6 +41,7 @@ struct RegistorJugador{
 
 // Prototipos
 int LeerOpcion(int minimo, int maximo);
+string NormalizarTexto(string texto);
 
 // main
 int main() {
@@ -100,4 +101,41 @@ int LeerOpcion(int minimo, int maximo) {
         }
     }
     return opcion;
+}
+
+// Normalizar texto de mayusculas, sin tildes ni dieresis, Ñ unificada
+string NormalizarTexto(string texto) {
+    string salida = "";
+    int i = 0;
+    int n = texto.length();
+    while (i < n) {
+        unsigned char c = texto[i];
+        unsigned char sig = 0;
+        if (i + 1 < n) sig = texto[i + 1];
+
+        if (c == 0xC3 && sig != 0) {
+            if (sig == 0xA1 || sig == 0x81) salida += 'A';
+            else if (sig == 0xA9 || sig == 0x89) salida += 'E';
+            else if (sig == 0xAD || sig == 0x8D) salida += 'I';
+            else if (sig == 0xB3 || sig == 0x93) salida += 'O';
+            else if (sig == 0xBA || sig == 0x9A || sig == 0xBC || sig == 0x9C) salida += 'U';
+            else if (sig == 0xB1 || sig == 0x91) salida += "Ñ";
+            else {
+                salida += texto[i];
+                salida += texto[i + 1];
+            }
+            i += 2;
+        } else {
+            if (c == 0xA0 || c == 0xB5) salida += 'A';
+            else if (c == 0x82 || c == 0x90) salida += 'E';
+            else if (c == 0xA1 || c == 0xD6) salida += 'I';
+            else if (c == 0xA2 || c == 0xE0) salida += 'O';
+            else if (c == 0xA3 || c == 0xE9 || c == 0x81 || c == 0x9A) salida += 'U';
+            else if (c == 0xA4 || c == 0xA5) salida += "Ñ";
+            else if (c >= 'a' && c <= 'z') salida += (char)(c - 'a' + 'A');
+            else salida += texto[i];
+            i++;
+        }
+    }
+    return salida;
 }
