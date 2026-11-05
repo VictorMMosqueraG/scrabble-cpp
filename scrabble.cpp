@@ -47,7 +47,12 @@ bool nombresConfigurados = false;
 Ficha Bolsa[TOTALFICHAS];
 int FichasEnBolsa = 0;
 bool AtrilUsado[TOTALPORTAFICHAS];
-string Tablero[TAMANOTABLERO][TAMANOTABLERO];       // "" = casilla libre
+string Tablero[TAMANOTABLERO][TAMANOTABLERO]; 
+string PalabraJugada;
+int fila = 0, columna = 0;
+char sentido = 'H';
+string palabraFichas[MAXCANTPALABRA];
+int CantFichasPalabra = 0;
 
 // Metodos
 int LeerOpcion(int minimo, int maximo);
@@ -62,6 +67,8 @@ void LlenarBolsa();
 void ReponerPortafichas(int numJugador);
 void MostrarTablero();
 void MostrarPortafichas(int numJugador);
+void PedirPalabra();
+void PartirPalabra(string palabra);
 
 // main
 int main() {
@@ -401,4 +408,79 @@ void MostrarPortafichas(int numJugador) {
              << Jugadores[numJugador].Atril[k].valor << ")] ";
     }
     cout << endl;
+}
+
+// Lee la palabra, la fila, la columna y el sentido
+void PedirPalabra() {
+    PalabraJugada = "";
+    while (PalabraJugada == "") {
+        cout << "Escriba la palabra: ";
+        string leida;
+        getline(cin, leida);
+        if (cin.eof()) {
+            cout << "\nFin de la entrada. Se cierra el programa." << endl;
+            exit(0);
+        }
+        string sinEspacios = "";
+        for (int k = 0; k < (int)leida.length(); k++) {
+            if (leida[k] != ' ' && leida[k] != '\r' && leida[k] != '\t') {
+                sinEspacios += leida[k];
+            }
+        }
+        PalabraJugada = NormalizarTexto(sinEspacios);
+    }
+    cout << "Fila de la primera letra (1-15): ";
+    fila = LeerOpcion(1, 15) - 1;
+    cout << "Columna de la primera letra (1-15): ";
+    columna = LeerOpcion(1, 15) - 1;
+
+    sentido = ' ';
+    while (sentido != 'H' && sentido != 'V') {
+        cout << "Sentido (H = horizontal, V = vertical): ";
+        string s;
+        getline(cin, s);
+        if (cin.eof()) {
+            cout << "\nFin de la entrada. Se cierra el programa." << endl;
+            exit(0);
+        }
+        if (s.length() > 0) {
+            sentido = s[0];
+            if (sentido == 'h') sentido = 'H';
+            if (sentido == 'v') sentido = 'V';
+        }
+        if (sentido != 'H' && sentido != 'V') {
+            cout << "Sentido no valido." << endl;
+        }
+    }
+}
+
+// Separa la palabra en fichas (CH, LL, RR y Ñ = una ficha)
+void PartirPalabra(string palabra) {
+    CantFichasPalabra = 0;
+    int i = 0;
+    int n = palabra.length();
+    while (i < n) {
+        string ficha;
+        unsigned char c = palabra[i];
+        unsigned char sig = 0;
+        if (i + 1 < n) sig = palabra[i + 1];
+
+        if (c == 0xC3 && sig == 0x91) {
+            ficha = "Ñ";   // la Ñ ocupa dos bytes en UTF-8
+            i += 2;
+        } else if ((c == 'C' && sig == 'H') || (c == 'L' && sig == 'L') ||
+                   (c == 'R' && sig == 'R')) {
+            ficha = palabra.substr(i, 2);
+            i += 2;
+        } else {
+            ficha = palabra.substr(i, 1);
+            i++;
+        }
+        // si la palabra es mas larga que el tablero solo se cuenta;
+        // ValidarJugadaTablero la rechaza porque no cabe
+        if (CantFichasPalabra < MAXCANTPALABRA) {
+            palabraFichas[CantFichasPalabra] = ficha;
+        }
+        CantFichasPalabra++;
+    }
 }
