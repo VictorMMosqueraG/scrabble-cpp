@@ -86,6 +86,7 @@ int CalcularPuntos();
 bool CambiarFichas();
 bool ProbarJugada();
 void JugarTurno();
+void ActualizarResultados();
 
 // main
 int main() {
@@ -805,4 +806,31 @@ void JugarTurno() {
     cout << "Puntaje total -> " << Jugadores[0].nombrejug << ": " << Jugadores[0].puntajejug
          << "   " << Jugadores[1].nombrejug << ": " << Jugadores[1].puntajejug << endl;
     MostrarPortafichas(numJ);
+}
+
+// Ganador o empate y registro
+void ActualizarResultados() {
+    int p0 = Jugadores[0].puntajejug;
+    int p1 = Jugadores[1].puntajejug;
+    int pos0 = BuscarJugadorRegistro(Jugadores[0].nombrejug);
+    int pos1 = BuscarJugadorRegistro(Jugadores[1].nombrejug);
+
+    cout << "\n=============== FIN DEL JUEGO ===============" << endl;
+    cout << Jugadores[0].nombrejug << ": " << p0 << " puntos" << endl;
+    cout << Jugadores[1].nombrejug << ": " << p1 << " puntos" << endl;
+
+    if (p0 > p1) {
+        cout << "Gana " << Jugadores[0].nombrejug << "!" << endl;
+        if (pos0 != -1) Registro[pos0].ganadas++;
+        if (pos1 != -1) Registro[pos1].perdidas++;
+    } else if (p1 > p0) {
+        cout << "Gana " << Jugadores[1].nombrejug << "!" << endl;
+        if (pos1 != -1) Registro[pos1].ganadas++;
+        if (pos0 != -1) Registro[pos0].perdidas++;
+    } else {
+        cout << "Empate!" << endl;
+        if (pos0 != -1) Registro[pos0].empatadas++;
+        if (pos1 != -1) Registro[pos1].empatadas++;
+    }
+    GuardarRegistro();
 }
