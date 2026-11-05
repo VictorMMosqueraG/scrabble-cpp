@@ -62,6 +62,7 @@ int ColumnaPalabra[MAXPALABRASFORMADAS];
 char SentidoPalabra[MAXPALABRASFORMADAS];
 int LargoPalabra[MAXPALABRASFORMADAS];
 int CantPalabrasFormadas = 0;
+int PuntosTurno = 0;
 
 // Metodos
 int LeerOpcion(int minimo, int maximo);
@@ -83,6 +84,7 @@ bool ValidarConRival(string palabra);
 bool ArmarYValidarPalabras();
 int CalcularPuntos();
 bool CambiarFichas();
+bool ProbarJugada();
 
 // main
 int main() {
@@ -717,4 +719,49 @@ bool CambiarFichas() {
         FichasEnBolsa++;
     }
     return true;
+}
+
+// Pide, valida y coloca una palabra, con reintento
+bool ProbarJugada() {
+    while (true) {
+        PedirPalabra();
+        PartirPalabra(PalabraJugada);
+
+        bool valida = ValidarJugadaTablero();
+        if (valida) {
+            for (int r = 0; r < TAMANOTABLERO; r++)
+                for (int c = 0; c < TAMANOTABLERO; c++)
+                    CopiaTablero[r][c] = Tablero[r][c];
+
+            for (int k = 0; k < CantFichasPalabra; k++) {
+                if (sentido == 'H') Tablero[fila][columna + k] = palabraFichas[k];
+                else Tablero[fila + k][columna] = palabraFichas[k];
+            }
+            MostrarTablero();
+
+            valida = ArmarYValidarPalabras();
+            if (!valida) {
+                for (int r = 0; r < TAMANOTABLERO; r++)
+                    for (int c = 0; c < TAMANOTABLERO; c++)
+                        Tablero[r][c] = CopiaTablero[r][c];
+                cout << "La palabra se quito del tablero." << endl;
+            }
+        }
+
+        if (valida) {
+            PuntosTurno = CalcularPuntos();
+            Jugadores[TurnoActual].puntajejug += PuntosTurno;
+            ReponerPortafichas(TurnoActual);
+            PrimeraJugada = false;
+            return true;
+        }
+
+        for (int k = 0; k < TOTALPORTAFICHAS; k++) AtrilUsado[k] = false;
+        cout << "1. Intentar otra palabra   2. Saltar el turno" << endl;
+        cout << "Opcion: ";
+        if (LeerOpcion(1, 2) == 2) {
+            return false;
+        }
+        MostrarPortafichas(TurnoActual);
+    }
 }
