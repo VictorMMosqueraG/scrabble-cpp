@@ -55,6 +55,13 @@ string palabraFichas[MAXCANTPALABRA];
 int CantFichasPalabra = 0;
 int TurnoActual = 0;
 bool PrimeraJugada = true;
+string CopiaTablero[TAMANOTABLERO][TAMANOTABLERO]; 
+string PalabrasFormadas[MAXPALABRASFORMADAS];
+int FilaPalabra[MAXPALABRASFORMADAS];
+int ColumnaPalabra[MAXPALABRASFORMADAS];
+char SentidoPalabra[MAXPALABRASFORMADAS];
+int LargoPalabra[MAXPALABRASFORMADAS];
+int CantPalabrasFormadas = 0;
 
 // Metodos
 int LeerOpcion(int minimo, int maximo);
@@ -72,6 +79,8 @@ void MostrarPortafichas(int numJugador);
 void PedirPalabra();
 void PartirPalabra(string palabra);
 bool ValidarJugadaTablero();
+bool ValidarConRival(string palabra);
+bool ArmarYValidarPalabras();
 
 // main
 int main() {
@@ -560,5 +569,112 @@ bool ValidarJugadaTablero() {
         cout << "Debe poner al menos una ficha de su portafichas." << endl;
         return false;
     }
+    return true;
+}
+
+// El jugador que no tiene el turno dice si la palabra vale
+bool ValidarConRival(string palabra) {
+    int rival = 1 - TurnoActual;
+    cout << Jugadores[rival].nombrejug << ", la palabra \"" << palabra
+         << "\" es valida?  1. Si   2. No" << endl;
+    cout << "Opcion: ";
+    int respuesta = LeerOpcion(1, 2);
+    return respuesta == 1;
+}
+
+// ArmarYValidarPalabras: arma la principal y las cruzadas, revisa las fichas
+// dobles sueltas y le pide al rival que apruebe cada palabra
+bool ArmarYValidarPalabras() {
+    CantPalabrasFormadas = 0;
+    int dr = 0, dc = 0;
+    if (sentido == 'H') dc = 1;
+    else dr = 1;
+
+    // palabra principal
+    int r = fila, c = columna;
+    while (r - dr >= 0 && c - dc >= 0 && Tablero[r - dr][c - dc] != "") {
+        r -= dr;
+        c -= dc;
+    }
+    int r0 = r, c0 = c;
+    string texto = "";
+    int largo = 0;
+    while (r < TAMANOTABLERO && c < TAMANOTABLERO && Tablero[r][c] != "") {
+        texto += Tablero[r][c];
+        largo++;
+        r += dr;
+        c += dc;
+    }
+    PalabrasFormadas[0] = texto;
+    FilaPalabra[0] = r0;
+    ColumnaPalabra[0] = c0;
+    SentidoPalabra[0] = sentido;
+    LargoPalabra[0] = largo;
+    CantPalabrasFormadas = 1;
+
+    int pr = dc, pc = dr;
+    char sentidoCruz = 'H';
+    if (sentido == 'H') sentidoCruz = 'V';
+    for (int k = 0; k < CantFichasPalabra; k++) {
+        int fr = fila + dr * k;
+        int fc = columna + dc * k;
+        if (CopiaTablero[fr][fc] == "") {
+            int rr = fr, cc = fc;
+            while (rr - pr >= 0 && cc - pc >= 0 && Tablero[rr - pr][cc - pc] != "") {
+                rr -= pr;
+                cc -= pc;
+            }
+            int ir = rr, ic = cc;
+            string cruzada = "";
+            int largoCruz = 0;
+            while (rr < TAMANOTABLERO && cc < TAMANOTABLERO && Tablero[rr][cc] != "") {
+                cruzada += Tablero[rr][cc];
+                largoCruz++;
+                rr += pr;
+                cc += pc;
+            }
+            if (largoCruz >= 2 && CantPalabrasFormadas < MAXPALABRASFORMADAS) {
+                PalabrasFormadas[CantPalabrasFormadas] = cruzada;
+                FilaPalabra[CantPalabrasFormadas] = ir;
+                ColumnaPalabra[CantPalabrasFormadas] = ic;
+                SentidoPalabra[CantPalabrasFormadas] = sentidoCruz;
+                LargoPalabra[CantPalabrasFormadas] = largoCruz;
+                CantPalabrasFormadas++;
+            }
+        }
+    }
+
+    for (int i = 0; i < CantPalabrasFormadas; i++) {
+        int wr = 0, wc = 0;
+        if (SentidoPalabra[i] == 'H') wc = 1;
+        else wr = 1;
+        for (int k = 0; k + 1 < LargoPalabra[i]; k++) {
+            string a = Tablero[FilaPalabra[i] + wr * k][ColumnaPalabra[i] + wc * k];
+            string b = Tablero[FilaPalabra[i] + wr * (k + 1)][ColumnaPalabra[i] + wc * (k + 1)];
+            if ((a == "C" && b == "H") || (a == "L" && b == "L") || (a == "R" && b == "R")) {
+                cout << "La palabra " << PalabrasFormadas[i] << " forma " << a << b
+                     << " con dos fichas sueltas; " << a << b
+                     << " debe ser una sola ficha." << endl;
+                return false;
+            }
+        }
+    }
+
+    cout << "\n----- VALIDACION DEL RIVAL -----" << endl;
+    cout << Jugadores[TurnoActual].nombrejug << " formo " << CantPalabrasFormadas
+         << " palabra(s): ";
+    for (int i = 0; i < CantPalabrasFormadas; i++) {
+        cout << PalabrasFormadas[i];
+        if (i < CantPalabrasFormadas - 1) cout << ", ";
+    }
+    cout << endl;
+    for (int i = 0; i < CantPalabrasFormadas; i++) {
+        if (!ValidarConRival(PalabrasFormadas[i])) {
+            cout << Jugadores[1 - TurnoActual].nombrejug << " rechazo la palabra "
+                 << PalabrasFormadas[i] << "." << endl;
+            return false;
+        }
+    }
+    cout << "Todas las palabras fueron aceptadas." << endl;
     return true;
 }
