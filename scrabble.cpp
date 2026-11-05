@@ -53,6 +53,8 @@ int fila = 0, columna = 0;
 char sentido = 'H';
 string palabraFichas[MAXCANTPALABRA];
 int CantFichasPalabra = 0;
+int TurnoActual = 0;
+bool PrimeraJugada = true;
 
 // Metodos
 int LeerOpcion(int minimo, int maximo);
@@ -69,6 +71,7 @@ void MostrarTablero();
 void MostrarPortafichas(int numJugador);
 void PedirPalabra();
 void PartirPalabra(string palabra);
+bool ValidarJugadaTablero();
 
 // main
 int main() {
@@ -466,7 +469,7 @@ void PartirPalabra(string palabra) {
         if (i + 1 < n) sig = palabra[i + 1];
 
         if (c == 0xC3 && sig == 0x91) {
-            ficha = "Ñ";   // la Ñ ocupa dos bytes en UTF-8
+            ficha = "Ñ";  
             i += 2;
         } else if ((c == 'C' && sig == 'H') || (c == 'L' && sig == 'L') ||
                    (c == 'R' && sig == 'R')) {
@@ -476,11 +479,86 @@ void PartirPalabra(string palabra) {
             ficha = palabra.substr(i, 1);
             i++;
         }
-        // si la palabra es mas larga que el tablero solo se cuenta;
-        // ValidarJugadaTablero la rechaza porque no cabe
         if (CantFichasPalabra < MAXCANTPALABRA) {
             palabraFichas[CantFichasPalabra] = ficha;
         }
         CantFichasPalabra++;
     }
+}
+
+// Revisa la jugada en el tablero, en seis pasos
+bool ValidarJugadaTablero() {
+    for (int k = 0; k < TOTALPORTAFICHAS; k++) {
+        AtrilUsado[k] = false;
+    }
+
+    if (CantFichasPalabra < 2) {
+        cout << "La palabra debe tener al menos dos fichas." << endl;
+        return false;
+    }
+    if (fila < 0 || fila >= TAMANOTABLERO || columna < 0 || columna >= TAMANOTABLERO ||
+        (sentido == 'H' && columna + CantFichasPalabra > TAMANOTABLERO) ||
+        (sentido == 'V' && fila + CantFichasPalabra > TAMANOTABLERO)) {
+        cout << "La palabra no cabe en el tablero." << endl;
+        return false;
+    }
+
+    int dr = 0, dc = 0;
+    if (sentido == 'H') dc = 1;
+    else dr = 1;
+
+    bool pasaCentro = false;
+    bool conecta = false;
+    for (int k = 0; k < CantFichasPalabra; k++) {
+        int r = fila + dr * k;
+        int c = columna + dc * k;
+        if (r == CENTRO && c == CENTRO) pasaCentro = true;
+        if (Tablero[r][c] != "") conecta = true;
+        if (r > 0 && Tablero[r - 1][c] != "") conecta = true;
+        if (r < TAMANOTABLERO - 1 && Tablero[r + 1][c] != "") conecta = true;
+        if (c > 0 && Tablero[r][c - 1] != "") conecta = true;
+        if (c < TAMANOTABLERO - 1 && Tablero[r][c + 1] != "") conecta = true;
+    }
+    if (PrimeraJugada && !pasaCentro) {
+        cout << "La primera palabra debe pasar por la casilla central (fila 8, columna 8)." << endl;
+        return false;
+    }
+    if (!PrimeraJugada && !conecta) {
+        cout << "La palabra debe usar o tocar al menos una letra del tablero." << endl;
+        return false;
+    }
+
+    int numJ = TurnoActual;
+    int nuevas = 0;
+    for (int k = 0; k < CantFichasPalabra; k++) {
+        int r = fila + dr * k;
+        int c = columna + dc * k;
+        if (Tablero[r][c] != "") {
+            if (Tablero[r][c] != palabraFichas[k]) {
+                cout << "En la fila " << (r + 1) << ", columna " << (c + 1)
+                     << " ya hay una " << Tablero[r][c] << " y la palabra pide "
+                     << palabraFichas[k] << "." << endl;
+                return false;
+            }
+        } else {
+            bool hallada = false;
+            for (int j = 0; j < Jugadores[numJ].CantFichasAct && !hallada; j++) {
+                if (!AtrilUsado[j] && Jugadores[numJ].Atril[j].letra == palabraFichas[k]) {
+                    AtrilUsado[j] = true;
+                    hallada = true;
+                }
+            }
+            if (!hallada) {
+                cout << "No tiene la ficha " << palabraFichas[k]
+                     << " en su portafichas." << endl;
+                return false;
+            }
+            nuevas++;
+        }
+    }
+    if (nuevas == 0) {
+        cout << "Debe poner al menos una ficha de su portafichas." << endl;
+        return false;
+    }
+    return true;
 }
