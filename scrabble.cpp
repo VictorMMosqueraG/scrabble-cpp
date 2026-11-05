@@ -2,6 +2,7 @@
 #include <string>
 #include <cstdlib>
 #include <fstream>
+#include <ctime>
 #ifdef _WIN32
 #include <windows.h>
 #endif
@@ -45,6 +46,7 @@ Jugador Jugadores[2];
 bool nombresConfigurados = false;
 Ficha Bolsa[TOTALFICHAS];
 int FichasEnBolsa = 0;
+bool AtrilUsado[TOTALPORTAFICHAS];
 
 // Metodos
 int LeerOpcion(int minimo, int maximo);
@@ -56,12 +58,14 @@ void CambiarNombres();
 void MostrarRegistro();
 int ValorLetra(string letra);
 void LlenarBolsa();
+void ReponerPortafichas(int numJugador);
 
 // main
 int main() {
 #ifdef _WIN32
-    SetConsoleOutputCP(65001);   
+    SetConsoleOutputCP(65001); 
 #endif
+    srand(time(0));
 
     cout << "=========================================" << endl;
     cout << "         SCRABBLE EN CASTELLANO" << endl;
@@ -160,9 +164,7 @@ string NormalizarTexto(string texto) {
     return salida;
 }
 
-// ============================================================================
-// CargarRegistro: lee registro.txt. Falso si no existe (primera ejecucion)
-// ============================================================================
+// Lee registro.txt. Falso si no existe (primera ejecucion)
 bool CargarRegistro() {
     ifstream archivo("registro.txt");
     CantRegistrados = 0;
@@ -327,5 +329,33 @@ void LlenarBolsa() {
             Bolsa[FichasEnBolsa].valor = ValorLetra(letras[i]);
             FichasEnBolsa++;
         }
+    }
+}
+
+// Quita las fichas usadas y completa hasta siete
+void ReponerPortafichas(int numJugador) {
+    int n = 0;
+    for (int j = 0; j < Jugadores[numJugador].CantFichasAct; j++) {
+        if (!AtrilUsado[j]) {
+            Jugadores[numJugador].Atril[n] = Jugadores[numJugador].Atril[j];
+            n++;
+        }
+    }
+    Jugadores[numJugador].CantFichasAct = n;
+
+    while (Jugadores[numJugador].CantFichasAct < TOTALPORTAFICHAS && FichasEnBolsa > 0) {
+        int pos = rand() % FichasEnBolsa;
+        Ficha tomada = Bolsa[pos];
+        Bolsa[pos] = Bolsa[FichasEnBolsa - 1];
+        FichasEnBolsa--;
+        Jugadores[numJugador].Atril[Jugadores[numJugador].CantFichasAct] = tomada;
+        Jugadores[numJugador].CantFichasAct++;
+    }
+    for (int k = Jugadores[numJugador].CantFichasAct; k < TOTALPORTAFICHAS; k++) {
+        Jugadores[numJugador].Atril[k].letra = "";
+        Jugadores[numJugador].Atril[k].valor = 0;
+    }
+    for (int k = 0; k < TOTALPORTAFICHAS; k++) {
+        AtrilUsado[k] = false;
     }
 }
