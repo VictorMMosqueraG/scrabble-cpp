@@ -473,10 +473,16 @@ void PedirPalabra() {
         }
         PalabraJugada = NormalizarTexto(sinEspacios);
     }
-    cout << "Fila de la primera letra (1-15): ";
-    fila = LeerOpcion(1, 15) - 1;
-    cout << "Columna de la primera letra (1-15): ";
-    columna = LeerOpcion(1, 15) - 1;
+    if (PrimeraJugada) {
+        fila = CENTRO;
+        columna = CENTRO;
+        cout << "La primera letra se ubica en la casilla central (*)." << endl;
+    } else {
+        cout << "Fila de la primera letra (1-15): ";
+        fila = LeerOpcion(1, 15) - 1;
+        cout << "Columna de la primera letra (1-15): ";
+        columna = LeerOpcion(1, 15) - 1;
+    }
 
     sentido = ' ';
     while (sentido != 'H' && sentido != 'V') {
