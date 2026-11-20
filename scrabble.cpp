@@ -92,6 +92,8 @@ string NormalizarTexto(string texto);     // Pasa un texto a mayusculas y sin ti
 bool CargarRegistro();                    // Lee registro.txt
 void GuardarRegistro();                   // Escribe registro.txt
 int BuscarJugadorRegistro(string nombre); // Busca un jugador en el historial
+string LeerNombre();                      // Lee un nombre del teclado y lo deja limpio
+void RenombrarJugador();                  // Cambia el nombre de un jugador del registro
 void CambiarNombres();                    // Pide los nombres de los jugadores
 void MostrarRegistro();                   // Muestra la tabla de resultados
 int ValorLetra(string letra);             // Dice cuantos puntos vale una letra
@@ -311,6 +313,77 @@ int BuscarJugadorRegistro(string nombre) {
 }
 
 
+//  LeerNombre: lee una linea del teclado y la deja lista para guardar:
+//  sin espacios al inicio ni al final, y con los espacios de adentro
+//  cambiados por _ ("  Ana Maria " queda "Ana_Maria").
+// Lee un nombre limpio. Puede devolver "" si solo escribio espacios
+string LeerNombre() {
+    string leido;                // Aqui se guarda lo que escriba
+    getline(cin, leido);         // getline lee la linea COMPLETA, con espacios ("Ana Maria")
+    if (cin.eof()) {             // Si se cerro la entrada, se cierra el programa
+        cout << "\nFin de la entrada. Se cierra el programa." << endl;
+        exit(0);
+    }
+    // Paso 1: cambiar los caracteres invisibles \r (lo deja Windows al final)
+    //         y \t (tecla Tab) por espacios normales
+    string limpio = "";
+    for (int k = 0; k < (int)leido.length(); k++) {  // Recorre letra por letra. (int) convierte
+                                                    // length() a int para compararlo con k
+        char c = leido[k];                          // La letra de la posicion k
+        if (c == '\r' || c == '\t') c = ' ';        // Si es \r o \t, se cambia por un espacio
+        limpio += c;                                // Se agrega al final de limpio
+    }
+    // Paso 2: ubicar donde empieza y termina el texto real (sin espacios en los extremos)
+    int ini = 0;                                    // Marcador del inicio: primera posicion
+    int fin = (int)limpio.length() - 1;             // Marcador del final: ultima posicion
+    while (ini <= fin && limpio[ini] == ' ') ini++; // Mientras haya espacio al inicio, avanza
+    while (fin >= ini && limpio[fin] == ' ') fin--; // Mientras haya espacio al final, retrocede
+    // Paso 3: copiar solo de ini a fin, cambiando los espacios de adentro por _
+    // (en el archivo los datos se separan por espacios; "Ana Maria" se partiria en dos)
+    string recortado = "";
+    for (int k = ini; k <= fin; k++) {
+        if (limpio[k] == ' ') recortado += '_';     // Espacio -> guion bajo
+        else recortado += limpio[k];                // Cualquier otra letra se copia igual
+    }
+    return recortado;
+}
+
+
+//  RenombrarJugador: cambia el nombre de un jugador que ya esta en el
+//  registro, conservando sus ganadas, perdidas y empatadas.
+// Pide cual jugador renombrar y su nombre nuevo, y guarda el registro
+void RenombrarJugador() {
+    cout << "Numero del jugador a renombrar (0 para cancelar): ";
+    int num = LeerOpcion(0, CantRegistrados);
+    if (num == 0) return;                           // Cancelo: no se cambia nada
+    int pos = num - 1;                              // Eligio 1 -> Registro[0]
+    string viejo = Registro[pos].nombre;
+
+    bool valido = false;
+    string nuevo;
+    while (!valido) {
+        cout << "Nuevo nombre para " << viejo << ": ";
+        nuevo = LeerNombre();
+        int existente = BuscarJugadorRegistro(nuevo);
+        if (nuevo == "") {
+            cout << "El nombre no puede estar vacio." << endl;
+        } else if (existente != -1 && existente != pos) {
+            // No puede quedar igual a otro jugador (se mezclarian sus resultados)
+            cout << "Ya existe un jugador llamado " << Registro[existente].nombre << "." << endl;
+        } else {
+            valido = true;
+        }
+    }
+
+    Registro[pos].nombre = nuevo;                   // Cambia el nombre; los resultados se quedan igual
+    for (int j = 0; j < 2; j++) {                   // Si estaba jugando, tambien se cambia en la partida
+        if (Jugadores[j].nombrejug == viejo) Jugadores[j].nombrejug = nuevo;
+    }
+    GuardarRegistro();
+    cout << viejo << " ahora se llama " << nuevo << "." << endl;
+}
+
+
 //  CambiarNombres: define quienes van a jugar.
 //  Fase 1: consigue dos nombres validos (de la lista o escritos).
 //  Fase 2: los registra en el historial (si son nuevos) y los asigna
@@ -333,43 +406,22 @@ void CambiarNombres() {
                     cout << "  " << (k + 1) << ". " << Registro[k].nombre << endl;  // "1. Victor", "2. Jhon"...
                 }
                 cout << "  0. Escribir un nombre nuevo" << endl;
+                cout << "  " << (CantRegistrados + 1) << ". Renombrar un jugador registrado" << endl;
                 cout << "Opcion: ";
-                eleccion = LeerOpcion(0, CantRegistrados);  // Acepta de 0 hasta la cantidad de jugadores
+                eleccion = LeerOpcion(0, CantRegistrados + 1);  // Acepta de 0 hasta la opcion de renombrar
             }
 
-            if (eleccion > 0) {          // Eligio a alguien de la lista
+            if (eleccion == CantRegistrados + 1) {  // Eligio renombrar (la ultima opcion de la lista)
+                int posJug1 = -1;                       // Donde esta el jugador 1 ya elegido (si lo hay)
+                if (i == 1) posJug1 = BuscarJugadorRegistro(nombres[0]);
+                RenombrarJugador();
+                if (posJug1 != -1) nombres[0] = Registro[posJug1].nombre;  // Por si se renombro al jugador 1
+                continue;                               // Vuelve a mostrar la lista con el nombre cambiado
+            } else if (eleccion > 0) {   // Eligio a alguien de la lista
                 nombres[i] = Registro[eleccion - 1].nombre;  // Se resta 1: eligio 1 -> Registro[0]
             } else {                     // Eligio 0, o no habia lista: hay que escribir el nombre
                 cout << "Nombre del jugador " << (i + 1) << ": ";
-                string leido;            // Aqui se guarda lo que escriba
-                getline(cin, leido);     // getline lee la linea COMPLETA, con espacios ("Ana Maria")
-                if (cin.eof()) {         // Si se cerro la entrada, se cierra el programa
-                    cout << "\nFin de la entrada. Se cierra el programa." << endl;
-                    exit(0);
-                }
-                // quitar espacios al inicio y al final, y cambiar los de adentro por _
-                // Paso 1: cambiar los caracteres invisibles \r (lo deja Windows al final)
-                //         y \t (tecla Tab) por espacios normales
-                string limpio = "";
-                for (int k = 0; k < (int)leido.length(); k++) {  // Recorre letra por letra. (int) convierte
-                                                                // length() a int para compararlo con k
-                    char c = leido[k];                          // La letra de la posicion k
-                    if (c == '\r' || c == '\t') c = ' ';        // Si es \r o \t, se cambia por un espacio
-                    limpio += c;                                // Se agrega al final de limpio
-                }
-                // Paso 2: ubicar donde empieza y termina el texto real (sin espacios en los extremos)
-                int ini = 0;                                    // Marcador del inicio: primera posicion
-                int fin = (int)limpio.length() - 1;             // Marcador del final: ultima posicion
-                while (ini <= fin && limpio[ini] == ' ') ini++; // Mientras haya espacio al inicio, avanza
-                while (fin >= ini && limpio[fin] == ' ') fin--; // Mientras haya espacio al final, retrocede
-                // Paso 3: copiar solo de ini a fin, cambiando los espacios de adentro por _
-                // (en el archivo los datos se separan por espacios; "Ana Maria" se partiria en dos)
-                string recortado = "";
-                for (int k = ini; k <= fin; k++) {
-                    if (limpio[k] == ' ') recortado += '_';     // Espacio -> guion bajo
-                    else recortado += limpio[k];                // Cualquier otra letra se copia igual
-                }
-                nombres[i] = recortado;                         // "  Ana Maria " queda "Ana_Maria"
+                nombres[i] = LeerNombre();
             }
 
             // Revisiones del nombre
